@@ -27,7 +27,37 @@ router.get('/daily', (req, res) => {
     `;
 
     const rows = db.prepare(query).all(date);
-    res.json(rows);
+    
+    // Inpatient Advances collected today
+    const advancesQuery = `
+        SELECT a.id, a.admission_date, a.advance_payment, p.name as patient_name,
+               w.name as ward_name, b.bed_number
+        FROM admissions a
+        JOIN patients p ON a.patient_id = p.id
+        JOIN beds b ON a.bed_id = b.id
+        JOIN wards w ON b.ward_id = w.id
+        WHERE date(a.admission_date) = ? AND a.advance_payment > 0
+    `;
+    const inpatientAdvances = db.prepare(advancesQuery).all(date);
+
+    // Inpatient Settlements (Discharge) collected today
+    const settlementsQuery = `
+        SELECT a.id, a.discharge_date, a.total_billed, a.balance_paid, p.name as patient_name,
+               w.name as ward_name, b.bed_number, pm.name as payment_mode
+        FROM admissions a
+        JOIN patients p ON a.patient_id = p.id
+        JOIN beds b ON a.bed_id = b.id
+        JOIN wards w ON b.ward_id = w.id
+        LEFT JOIN payment_modes pm ON a.payment_mode_id = pm.id
+        WHERE date(a.discharge_date) = ? AND a.balance_paid > 0
+    `;
+    const inpatientSettlements = db.prepare(settlementsQuery).all(date);
+
+    res.json({ 
+        appointments: rows,
+        inpatientAdvances,
+        inpatientSettlements
+    });
 });
 
 router.get('/patient/:patientId', (req, res) => {
@@ -48,22 +78,42 @@ router.get('/patient/:patientId', (req, res) => {
         WHERE a.patient_id = ?
     `;
 
+    let admQuery = `
+        SELECT a.*, b.bed_number, w.name as ward_name, w.cost_per_day
+        FROM admissions a
+        JOIN beds b ON a.bed_id = b.id
+        JOIN wards w ON b.ward_id = w.id
+        WHERE a.patient_id = ?
+    `;
+
     const params = [patientId];
+    const admParams = [patientId];
 
     if (startDate) {
         query += ' AND a.date >= ?';
+        admQuery += " AND date(a.admission_date) >= ?";
         params.push(startDate);
+        admParams.push(startDate);
     }
     if (endDate) {
         query += ' AND a.date <= ?';
+        admQuery += " AND date(a.admission_date) <= ?";
         params.push(endDate);
+        admParams.push(endDate);
     }
 
     query += ' ORDER BY a.date DESC';
+    admQuery += ' ORDER BY a.admission_date DESC';
 
     const appointments = db.prepare(query).all(...params);
+    const admissions = db.prepare(admQuery).all(...admParams);
 
-    res.json({ patient, appointments });
+    // Fetch services for each admission
+    for (let adm of admissions) {
+        adm.services = db.prepare('SELECT * FROM inpatient_services WHERE admission_id = ?').all(adm.id);
+    }
+
+    res.json({ patient, appointments, admissions });
 });
 
 module.exports = router;

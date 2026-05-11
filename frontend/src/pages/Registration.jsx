@@ -63,9 +63,16 @@ export default function Registration() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setShowPaymentGateway(true);
-        setPaymentProcessing(false);
-        setPaymentSuccess(false);
+        
+        const selectedMode = masters.paymentModes.find(p => String(p.id) === String(formData.payment_mode_id));
+        
+        if (selectedMode && selectedMode.name.toLowerCase() === 'cash') {
+            completeRegistration();
+        } else {
+            setShowPaymentGateway(true);
+            setPaymentProcessing(false);
+            setPaymentSuccess(false);
+        }
     };
 
     const simulatePayment = () => {

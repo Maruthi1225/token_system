@@ -42,7 +42,7 @@ export default function PatientReport() {
     if (loading) return <div className="p-8 font-bold text-gray-500">Loading patient history...</div>;
     if (!data || !data.patient) return <div className="p-8 font-bold text-red-500">Patient not found.</div>;
 
-    const { patient, appointments } = data;
+    const { patient, appointments, admissions = [] } = data;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -95,8 +95,71 @@ export default function PatientReport() {
                     </div>
                 </div>
 
+                {/* Inpatient History Section */}
+                {admissions && admissions.length > 0 && (
+                    <div className="space-y-8 mb-12">
+                        <h2 className="text-2xl font-bold border-b-2 border-blue-200 pb-2 text-blue-900 print:border-gray-800 print:text-black">Inpatient Stays</h2>
+                        
+                        {admissions.map(adm => {
+                            const isDischarged = adm.status === 'Discharged';
+                            const endDate = isDischarged ? new Date(adm.discharge_date) : new Date();
+                            const diffTime = Math.abs(endDate - new Date(adm.admission_date));
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+                            
+                            return (
+                                <div key={adm.id} className="border border-blue-100 rounded-xl p-6 bg-blue-50/20 shadow-sm print:bg-transparent print:border-gray-400 print:shadow-none print:break-inside-avoid">
+                                    <div className="flex justify-between items-start mb-4 border-b border-blue-100 pb-4 print:border-gray-300">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-blue-800 print:text-black">
+                                                Admitted: {new Date(adm.admission_date).toLocaleString()}
+                                            </h3>
+                                            <p className="text-blue-600 font-medium print:text-gray-600">
+                                                Status: {adm.status} {isDischarged && `(Discharged: ${new Date(adm.discharge_date).toLocaleString()})`}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs font-bold text-blue-400 uppercase tracking-widest print:text-gray-400">Ward - Bed</div>
+                                            <div className="text-2xl font-black text-blue-900 print:text-black">{adm.ward_name} - {adm.bed_number}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mb-2 text-sm text-gray-600 font-medium">
+                                        Total Stay: {diffDays} Days
+                                    </div>
+
+                                    {adm.services && adm.services.length > 0 && (
+                                        <div className="mt-4">
+                                            <h4 className="text-sm font-bold text-gray-500 uppercase mb-3">Treatments & Services Received</h4>
+                                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden print:bg-transparent">
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-gray-50 text-gray-600">
+                                                        <tr>
+                                                            <th className="px-4 py-2 font-semibold border-b">Date</th>
+                                                            <th className="px-4 py-2 font-semibold border-b">Service</th>
+                                                            <th className="px-4 py-2 font-semibold border-b text-center">Qty</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                        {adm.services.map(s => (
+                                                            <tr key={s.id}>
+                                                                <td className="px-4 py-2 text-gray-500">{new Date(s.date).toLocaleDateString()}</td>
+                                                                <td className="px-4 py-2 font-medium">{s.service_name}</td>
+                                                                <td className="px-4 py-2 text-center">{s.quantity}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
                 <div className="space-y-8">
-                    <h2 className="text-2xl font-bold border-b-2 border-gray-100 pb-2 print:border-gray-800">Clinical Encounters</h2>
+                    <h2 className="text-2xl font-bold border-b-2 border-gray-100 pb-2 print:border-gray-800">Outpatient Clinical Encounters</h2>
                     
                     {appointments.length === 0 && (
                         <p className="text-gray-500 italic p-4 text-center bg-gray-50 rounded-lg">No appointments found in this timeframe.</p>

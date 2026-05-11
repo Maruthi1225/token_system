@@ -9,6 +9,8 @@ import PreliminaryInvestigation from './pages/PreliminaryInvestigation';
 import Reports from './pages/Reports';
 import Masters from './pages/Masters';
 import PatientReport from './pages/PatientReport';
+import Inpatients from './pages/Inpatients';
+import InpatientDetails from './pages/InpatientDetails';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -52,6 +54,14 @@ function App() {
           <Route 
              path="/patient-report/:id" 
              element={<ProtectedRoute allowedRoles={['Admin', 'User1', 'User2/User3']}><PatientReport /></ProtectedRoute>} 
+          />
+          <Route 
+             path="/inpatients" 
+             element={<ProtectedRoute allowedRoles={['Admin', 'User1', 'User2/User3']}><Inpatients /></ProtectedRoute>} 
+          />
+          <Route 
+             path="/inpatient/:id" 
+             element={<ProtectedRoute allowedRoles={['Admin', 'User1', 'User2/User3']}><InpatientDetails /></ProtectedRoute>} 
           />
         </Route>
       </Routes>

@@ -3,18 +3,18 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
     LayoutDashboard, UserPlus, Search, Stethoscope, 
-    FileText, Settings, LogOut 
+    FileText, Settings, LogOut, Bed 
 } from 'lucide-react';
 
 export default function Sidebar() {
     const { user, logout } = useAuth();
     
-    // Define navigation items based on features
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard, roles: ['Admin', 'User1', 'User2/User3'] },
         { name: 'Register Patient', path: '/register', icon: UserPlus, roles: ['Admin', 'User1', 'User2/User3'] },
         { name: 'Patient Search/Edit', path: '/search', icon: Search, roles: ['Admin', 'User1', 'User2/User3'] },
         { name: 'Investigations', path: '/investigations', icon: Stethoscope, roles: ['Admin', 'User2/User3'] },
+        { name: 'Inpatients', path: '/inpatients', icon: Bed, roles: ['Admin', 'User1', 'User2/User3'] },
         { name: 'Daily Report', path: '/reports', icon: FileText, roles: ['Admin', 'User1', 'User2/User3'] },
         { name: 'Masters', path: '/masters', icon: Settings, roles: ['Admin'] },
     ];
