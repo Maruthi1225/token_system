@@ -15,6 +15,20 @@ router.post('/', (req, res) => {
         date // "YYYY-MM-DD"
     } = req.body;
 
+    const apptDate = date || new Date().toISOString().split('T')[0];
+
+    const getLocalDateStr = (d = new Date()) => {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    };
+    const minDate = getLocalDateStr();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const maxDate = getLocalDateStr(tomorrow);
+
+    if (apptDate < minDate || apptDate > maxDate) {
+        return res.status(400).json({ message: "Registration date must be either today or tomorrow." });
+    }
+
     const tx = db.transaction(() => {
         let finalPatientId = patient_id;
 
@@ -34,7 +48,6 @@ router.post('/', (req, res) => {
             `).run(name, gender, age, village, mandal, district, phone, finalPatientId);
         }
 
-        const apptDate = date || new Date().toISOString().split('T')[0];
 
         // Generate token number for the day and batch
         const lastTokenRow = db.prepare(`

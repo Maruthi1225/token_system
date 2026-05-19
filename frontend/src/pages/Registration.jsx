@@ -6,9 +6,18 @@ import { Search, Printer, CreditCard, Smartphone, CheckCircle, Loader2 } from 'l
 export default function Registration() {
     const { user } = useAuth();
     
+    const getLocalDateStr = (d = new Date()) => {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    };
+
+    const minDate = getLocalDateStr();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const maxDate = getLocalDateStr(tomorrow);
+
     const [formData, setFormData] = useState({
         visit_type: 'New',
-        date: new Date().toISOString().split('T')[0],
+        date: minDate,
         patient_id: '',
         name: '', gender: '', age: '', village: '', mandal: '', district: '', phone: '',
         doctor_id: '', referral_id: '', batch_id: '', appointment_time: '', 
@@ -96,7 +105,7 @@ export default function Registration() {
             
             // Reset state
             setFormData({
-                visit_type: 'New', date: new Date().toISOString().split('T')[0], patient_id: '',
+                visit_type: 'New', date: minDate, patient_id: '',
                 name: '', gender: '', age: '', village: '', mandal: '', district: '', phone: '',
                 doctor_id: '', referral_id: '', batch_id: '', appointment_time: '', 
                 payment_mode_id: '', consultation_fee: '500', comments: ''
@@ -189,7 +198,7 @@ export default function Registration() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                            <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50" required />
+                            <input type="date" name="date" value={formData.date} min={minDate} max={maxDate} onChange={handleChange} className="w-full border p-2 rounded-lg bg-gray-50" required />
                         </div>
                     </div>
 
